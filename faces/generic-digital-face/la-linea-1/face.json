@@ -1,0 +1,17 @@
+{
+    "version": "1",
+    "background": {
+        "color": "#01248A",
+        "image": "background.png"
+    },
+    "labels": [
+        {
+            "font": "IAmOnlineWithU-70.font",
+            "color": "#FFFFFF",
+            "align": "TOP_RIGHT",
+            "x": 0,
+            "y": 134,
+            "text": "{HH}:{mm}"
+        }
+    ]
+}

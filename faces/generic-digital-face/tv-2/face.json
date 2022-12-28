@@ -1,0 +1,17 @@
+{
+    "version": "1",
+    "background": {
+        "color": "#000000",
+        "image": "background.png"
+    },
+    "labels": [
+        {
+            "font": "UbuntuMono-Regular-28.font",
+            "color": "#F3F3F3",
+            "align": "CENTER",
+            "x": -2,
+            "y": -88,
+            "text": "{HH}:{mm}"
+        }
+    ]
+}

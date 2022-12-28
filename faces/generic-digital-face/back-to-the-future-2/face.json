@@ -1,0 +1,17 @@
+{
+    "version": "1",
+    "background": {
+        "color": "#000000",
+        "image": "background.jpg"
+    },
+    "labels": [
+        {
+            "font": "BackToTheFuture-66.font",
+            "color": "#EFB528",
+            "align": "CENTER",
+            "x": 0,
+            "y": -70,
+            "text": "{HH}:{mm}"
+        }
+    ]
+}

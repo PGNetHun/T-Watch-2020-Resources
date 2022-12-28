@@ -1,0 +1,17 @@
+{
+    "version": "1",
+    "background": {
+        "color": "#000000",
+        "image": "background.png"
+    },
+    "labels": [
+        {
+            "font": "VCR_OSD_MONO-46.font",
+            "color": "#FE7401",
+            "align": "CENTER",
+            "x": -40,
+            "y": -10,
+            "text": "{HH}:{mm}"
+        }
+    ]
+}

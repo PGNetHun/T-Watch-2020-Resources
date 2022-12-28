@@ -1,0 +1,24 @@
+{
+    "version": "1",
+    "background": {
+        "color": "#213228"
+    },
+    "labels": [
+        {
+            "font": "DS-TERM-36.font",
+            "color": "#2FFBB1",
+            "align": "LEFT_MID",
+            "x": 15,
+            "y": 0,
+            "text": "{HH}:{mm}\n\n{YYYY}-{MM}-{DD}\n\n{battery_percent}%"
+        },
+        {
+            "font": "DS-TERM-36.font",
+            "color": "#2FFBB1",
+            "align": "BOTTOM_LEFT",
+            "x": 15,
+            "y": -10,
+            "text": ">_"
+        }
+    ]
+}

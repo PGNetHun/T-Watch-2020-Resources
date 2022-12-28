@@ -1,0 +1,17 @@
+{
+    "version": "1",
+    "background": {
+        "color": "#000000",
+        "image": "background.jpg"
+    },
+    "labels": [
+        {
+            "font": "Metro-26.font",
+            "color": "#FFFFFF",
+            "align": "CENTER",
+            "x": 0,
+            "y": 100,
+            "text": "{HH}:{mm}"
+        }
+    ]
+}

@@ -1,0 +1,17 @@
+{
+    "version": "1",
+    "background": {
+        "color": "#000000",
+        "image": "background.png"
+    },
+    "labels": [
+        {
+            "font": "acmesab-24.font",
+            "color": "#000000",
+            "align": "TOP_MID",
+            "x": 56,
+            "y": 25,
+            "text": "{HH}:{mm}"
+        }
+    ]
+}

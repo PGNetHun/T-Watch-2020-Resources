@@ -1,0 +1,17 @@
+{
+    "version": "1",
+    "background": {
+        "color": "#000000",
+        "image": "background.jpg"
+    },
+    "labels": [
+        {
+            "font": "TERMINAT-40.font",
+            "color": "#FFFFFF",
+            "align": "RIGHT_MID",
+            "x": 0,
+            "y": 0,
+            "text": "{HH}\n{mm}"
+        }
+    ]
+}

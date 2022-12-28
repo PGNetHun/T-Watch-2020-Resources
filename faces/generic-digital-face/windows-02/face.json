@@ -1,0 +1,25 @@
+{
+    "version": "1",
+    "background": {
+        "color": "#000000",
+        "image": "background.png"
+    },
+    "labels": [
+        {
+            "font": "WindowsRegular-60.font",
+            "color": "#000000",
+            "align": "TOP_MID",
+            "x": 0,
+            "y": 62,
+            "text": "{HH}:{mm}"
+        },
+        {
+            "font": "WindowsRegular-24.font",
+            "color": "#000000",
+            "align": "TOP_MID",
+            "x": 0,
+            "y": 132,
+            "text": "{battery_percent}%"
+        }
+    ]
+}

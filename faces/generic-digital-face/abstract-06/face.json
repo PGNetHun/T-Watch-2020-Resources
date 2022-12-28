@@ -1,0 +1,25 @@
+{
+    "version": "1",
+    "background": {
+        "color": "#000000",
+        "image": "background.png"
+    },
+    "labels": [
+        {
+            "font": "KeepCalmMedium-50.font",
+            "color": "#283338",
+            "align": "RIGHT_MID",
+            "x": -3,
+            "y": -21,
+            "text": "{HH}:{mm}"
+        },
+        {
+            "font": "KeepCalmMedium-50.font",
+            "color": "#03ABF2",
+            "align": "RIGHT_MID",
+            "x": -8,
+            "y": -25,
+            "text": "{HH}:{mm}"
+        }
+    ]
+}
