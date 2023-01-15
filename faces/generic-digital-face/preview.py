@@ -308,13 +308,11 @@ class App():
         self._faces_path = os.getcwd()
         self._root_path = self._faces_path.rsplit("/", 2)[0]
         self._face: Face = None
+        self._faces = []
         self._menu_screen: lv.obj = None
         self._face_screen: lv.obj = None
         self._face_selector_dropdown: lv.dropdown = None
         self._is_running = False
-
-        self._faces = [entry[0] for entry in os.ilistdir(self._faces_path) if entry[1] == _TYPE_DIRECTORY and not entry[0].startswith("_")]
-        self._faces.sort()
 
         self._init_lvgl()
         self._init_lvgl_fs()
@@ -323,7 +321,7 @@ class App():
         self._init_face_screen()
 
     async def loop(self, face_name=None):
-        if face_name and self._path_exists(f"{self._faces_path}/{face_name}"):
+        if face_name and face_name in self._faces and self._path_exists(f"{self._faces_path}/{face_name}"):
             self._face_selector_dropdown.set_selected(self._faces.index(face_name))
             self._show_face(face_name)
         else:
@@ -333,6 +331,10 @@ class App():
             await uasyncio.sleep_ms(200)
 
     def snapshot(self, face_name, snapshot_file_name, time_tuple):
+        if not face_name or not self._path_exists(f"{self._faces_path}/{face_name}"):
+            print(f"Face does not exist: {face_name}")
+            return
+
         self._show_face(face_name, time_tuple)
         snapshot = lv.snapshot_take(self._face_screen, lv.img.CF.TRUE_COLOR_ALPHA)
         size = self._face_screen.get_width() * self._face_screen.get_height() * 4
@@ -395,16 +397,16 @@ class App():
         self._menu_screen = self._create_screen()
         screen = self._menu_screen
         screen.set_size(lv.pct(100), lv.pct(100))
-        screen.set_style_pad_ver(20, 0)
+        screen.set_style_pad_ver(10, 0)
         screen.set_flex_flow(lv.FLEX_FLOW.COLUMN)
         screen.set_flex_align(lv.FLEX_ALIGN.START, lv.FLEX_ALIGN.CENTER, lv.FLEX_ALIGN.CENTER)
         screen.set_style_pad_row(10, lv.STATE.DEFAULT)
 
         # Faces dropdown
         dd = lv.dropdown(screen)
-        self._face_selector_dropdown = dd
         dd.set_width(_MENU_ITEM_WIDTH)
-        dd.set_options("\n".join(self._faces))
+        self._face_selector_dropdown = dd
+        self._load_faces_list()
 
         # Show button
         button = lv.btn(screen)
@@ -412,6 +414,15 @@ class App():
         button.add_event_cb(self._show_button_cb, lv.EVENT.CLICKED, None)
         label = lv.label(button)
         label.set_text("Show")
+        label.center()
+
+        # Reload list button
+        button = lv.btn(screen)
+        button.set_size(_MENU_ITEM_WIDTH, _MENU_ITEM_HEIGHT)
+        button.set_style_bg_color(lv.color_hex(0x00CC00), 0)
+        button.add_event_cb(self._reload_button_cb, lv.EVENT.CLICKED, None)
+        label = lv.label(button)
+        label.set_text("Reload list")
         label.center()
 
         # Exit button
@@ -426,10 +437,23 @@ class App():
     def _init_face_screen(self):
         self._face_screen = self._create_screen()
         self._face_screen.add_event_cb(self._face_screen_click_cb, lv.EVENT.CLICKED, None)
+    
+    def _load_faces_list(self):
+        faces = [entry[0] for entry in os.ilistdir(self._faces_path) if entry[1] == _TYPE_DIRECTORY and not entry[0].startswith("_")]
+        faces.sort()
+        self._faces = faces
+
+        self._face_selector_dropdown.set_options("\n".join(faces))
 
     def _show_button_cb(self, event):
         face_name = self._faces[self._face_selector_dropdown.get_selected()]
         self._show_face(face_name)
+    
+    def _reload_button_cb(self, event):
+        current_face_name = self._faces[self._face_selector_dropdown.get_selected()]
+        self._load_faces_list()
+        if current_face_name in self._faces:
+            self._face_selector_dropdown.set_selected(self._faces.index(current_face_name))
 
     def _exit_button_cb(self, event):
         self._is_running = False

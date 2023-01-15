@@ -6,11 +6,11 @@
     },
     "labels": [
         {
-            "font": "KeepCalmMedium-60.font",
-            "color": "#1763CA",
-            "align": "CENTER",
+            "font": "KeepCalmMedium-44.font",
+            "color": "#DEDEDE",
+            "align": "BOTTOM_MID",
             "x": 0,
-            "y": 80,
+            "y": 0,
             "text": "{HH}:{mm}"
         }
     ]
