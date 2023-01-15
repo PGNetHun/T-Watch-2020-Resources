@@ -43,28 +43,48 @@ except:
     print(_USAGE)
     sys.exit(1)
 
+names = []
+process_names = []
+
+# Check if optional face name is passed as argument
 if len(sys.argv) > 2:
-    # Optional face name was given, 
-    # so generate preview only for that face, 
-    # and append to existing faces list
-    names = [sys.argv[2]]
+    # Optional face name was given, so generate preview only for that face, and append to existing faces list
+    face_name = sys.argv[2]
+    process_names = [face_name]
     try:
         with open(_LIST_FILE, "r") as f:
             faces = json.load(f)
+            names = faces.get("names", [])
+            if face_name not in names:
+                names.append(face_name)
+            names.sort()
     except:
-        faces = {}
+        pass
 
 else:
     # Get list of faces
     names = [e.name for e in os.scandir(".") if e.is_dir() and not e.name.startswith("_")]
     names.sort()
+    process_names = names
 
-    # Faces list
-    faces = {}
-    
+faces = {
+    "previews":{
+        "directory": _PREVIEWS_DIRECTORY,
+        "name_postfix": _PREVIEW_POSTFIX + _PREVIEW_EXTENSION,
+        "width": _SNAPSHOT_WIDTH,
+        "height": _SNAPSHOT_HEIGHT,
+    },
+    "thumbnails":{
+        "directory": _PREVIEWS_DIRECTORY,
+        "name_postfix": _THUMBNAIL_POSTFIX + _THUMBNAIL_EXTENSION,
+        "width": _THUMBNAIL_WIDTH,
+        "height": _THUMBNAIL_HEIGHT,
+    },
+    "names": names
+}
 
-# Generate list and preview images
-for name in names:
+# Generate preview images
+for name in process_names:
     try:
         print(f"Generate preview for face: {name}")
 
@@ -84,29 +104,6 @@ for name in names:
         # Delete RAW file
         os.remove(snapshot_name)
 
-        # Get list of face files from directory
-        files = [e.name for e in os.scandir(name) if e.is_file() and not e.name.startswith(".")]
-
-        # Get additional face files from the face JSON file
-        with open(f"{name}/{_FACE_FILE}", "r") as f:
-            face: dict = json.load(f)
-            if "background" in face:
-                background_file = face.get("background").get("image", None)
-                if background_file and background_file not in files:
-                    files.append(background_file)
-            if "labels" in face:
-                labels = face.get("labels", [])
-                for label in labels:
-                    font_file = label.get("font", None)
-                    if font_file and font_file not in files:
-                        files.append(font_file)
-
-        # Add face info to list
-        faces[name] = {
-            "preview": f"{name}{_PREVIEW_POSTFIX}{_PREVIEW_EXTENSION}",
-            "thumbnail": f"{name}{_THUMBNAIL_POSTFIX}{_THUMBNAIL_EXTENSION}",
-            "files": files
-        }
     except Exception as e:
         print(f"Error generating face preview: {name}", e)
 
