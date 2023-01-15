@@ -43,29 +43,29 @@ except:
     print(_USAGE)
     sys.exit(1)
 
-names = []
-process_names = []
+face_names = []
+process_faces = []
 
 # Check if optional face name is passed as argument
 if len(sys.argv) > 2:
     # Optional face name was given, so generate preview only for that face, and append to existing faces list
     face_name = sys.argv[2]
-    process_names = [face_name]
+    process_faces = [face_name]
     try:
         with open(_LIST_FILE, "r") as f:
             faces = json.load(f)
-            names = faces.get("names", [])
-            if face_name not in names:
-                names.append(face_name)
-            names.sort()
+            face_names = faces.get("names", [])
+            if face_name not in face_names:
+                face_names.append(face_name)
+            face_names.sort()
     except:
         pass
 
 else:
     # Get list of faces
-    names = [e.name for e in os.scandir(".") if e.is_dir() and not e.name.startswith("_")]
-    names.sort()
-    process_names = names
+    face_names = [e.name for e in os.scandir(".") if e.is_dir() and not e.name.startswith("_")]
+    face_names.sort()
+    process_faces = face_names
 
 faces = {
     "previews":{
@@ -80,11 +80,22 @@ faces = {
         "width": _THUMBNAIL_WIDTH,
         "height": _THUMBNAIL_HEIGHT,
     },
-    "names": names
+    "names": face_names
 }
 
+# Remove old unused preview files
+existing_files = set([e.name for e in os.scandir(_PREVIEWS_DIRECTORY) if e.is_file() and not e.name.startswith("_") and not e.name.startswith(".")])
+face_previews = [f"{name}{_PREVIEW_POSTFIX}{_PREVIEW_EXTENSION}" for name in face_names]
+face_previews.extend([f"{name}{_THUMBNAIL_POSTFIX}{_THUMBNAIL_EXTENSION}" for name in face_names])
+for filename in existing_files.difference(face_previews):
+    try:
+        print(f"Delete unused preview file: {filename}")
+        os.remove(f"{_PREVIEWS_DIRECTORY}/{filename}")
+    except Exception as e:
+        print(f"Error deleting old unused preview file: {filename}", e)
+
 # Generate preview images
-for name in process_names:
+for name in process_faces:
     try:
         print(f"Generate preview for face: {name}")
 
@@ -106,6 +117,7 @@ for name in process_names:
 
     except Exception as e:
         print(f"Error generating face preview: {name}", e)
+
 
 # Save faces list JSON
 with open(_LIST_FILE, "w") as f:

@@ -1,0 +1,17 @@
+{
+    "version": "1",
+    "background": {
+        "color": "#000000",
+        "image": "background.jpg"
+    },
+    "labels": [
+        {
+            "font": "FaithCollapsing-36.font",
+            "color": "#582C10",
+            "align": "CENTER",
+            "x": 5,
+            "y": 77,
+            "text": "{HH}:{mm}"
+        }
+    ]
+}
