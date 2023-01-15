@@ -9,15 +9,15 @@
             "color": "#FAFAFA",
             "align": "TOP_MID",
             "x": 0,
-            "y": 20,
-            "text": "\"The hate of men will pass,\nand dictators die,\n... and so long as men die,\nliberty will never perish...\"\nThe Great Dictator, 1940\nCharlie Chaplin"
+            "y": 10,
+            "text": "\"The hate of men will pass,\nand dictators die.\n... and so long as men die,\nliberty will never perish...\"\n\nThe Great Dictator, 1940\nCharlie Chaplin"
         },
         {
             "font": "KeepCalmMedium-60.font",
             "color": "#FAFAFA",
             "align": "BOTTOM_MID",
             "x": 0,
-            "y": -10,
+            "y": -5,
             "text": "{HH}:{mm}"
         }
     ]

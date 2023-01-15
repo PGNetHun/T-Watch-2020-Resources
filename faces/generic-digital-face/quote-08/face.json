@@ -8,6 +8,7 @@
             "font": "KeepCalmMedium-20.font",
             "color": "#FAFAFA",
             "align": "TOP_MID",
+            "textalign": "CENTER",
             "x": 0,
             "y": 15,
             "text": "\"There's some good\nin this world,\nand it's worth\nfighting for.\"\nLord of The Rings\nJ. R. R. Tolkien "

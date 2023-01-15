@@ -8,6 +8,7 @@
             "font": "KeepCalmMedium-20.font",
             "color": "#FAFAFA",
             "align": "TOP_MID",
+            "textalign": "CENTER",
             "x": 0,
             "y": 20,
             "text": "\"The world will know\nthat free men stood\nagainst a tyrant,\nthat few stood\nagainst many.\""

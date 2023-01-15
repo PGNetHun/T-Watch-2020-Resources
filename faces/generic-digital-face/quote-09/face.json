@@ -8,16 +8,17 @@
             "font": "KeepCalmMedium-20.font",
             "color": "#FAFAFA",
             "align": "TOP_MID",
+            "textalign": "CENTER",
             "x": 0,
-            "y": 30,
-            "text": "\"Oft hope is born\nwhen all is forlorn.\"\nLord of The Rings\nJ. R. R. Tolkien"
+            "y": 20,
+            "text": "\"Oft hope is born\nwhen all is forlorn.\"\n\nLord of The Rings\nJ. R. R. Tolkien"
         },
         {
             "font": "KeepCalmMedium-60.font",
             "color": "#FAFAFA",
             "align": "BOTTOM_MID",
             "x": 0,
-            "y": -20,
+            "y": -10,
             "text": "{HH}:{mm}"
         }
     ]

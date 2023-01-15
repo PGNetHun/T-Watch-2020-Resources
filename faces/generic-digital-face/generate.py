@@ -17,6 +17,8 @@ Usage:
 _LIST_FILE = "faces.json"
 _FACE_FILE = "face.json"
 
+_PREVIEW_TIME_TUPLE = str((2023, 1, 1, 12, 0, 0, 0))
+
 _PREVIEWS_DIRECTORY = "_previews"
 _PREVIEW_POSTFIX = "_preview"
 _PREVIEW_EXTENSION = ".jpg"
@@ -66,21 +68,21 @@ for name in names:
     try:
         print(f"Generate preview for face: {name}")
 
-        raw_name = f"{_PREVIEWS_DIRECTORY}/{name}{_PREVIEW_POSTFIX}.raw"
+        snapshot_name = f"{_PREVIEWS_DIRECTORY}/{name}{_PREVIEW_POSTFIX}.raw"
         image_name = f"{_PREVIEWS_DIRECTORY}/{name}{_PREVIEW_POSTFIX}{_PREVIEW_EXTENSION}"
         thumbnail_name = f"{_PREVIEWS_DIRECTORY}/{name}{_THUMBNAIL_POSTFIX}{_THUMBNAIL_EXTENSION}"
         
         # Generate face and take RAW snapshot
-        subprocess.run([mpy, _PREVIEW_MPY_FILE, "--snapshot", name, raw_name], stdout=subprocess.PIPE)
+        subprocess.run([mpy, _PREVIEW_MPY_FILE, name, snapshot_name, _PREVIEW_TIME_TUPLE], stdout=subprocess.PIPE)
 
         # Convert RAW snapshot to image file
-        subprocess.run([_PYTHON_COMMAND, _SNAPSHOT_CONVERTER, raw_name, image_name, str(_SNAPSHOT_WIDTH), str(_SNAPSHOT_HEIGHT)], stdout=subprocess.PIPE)
+        subprocess.run([_PYTHON_COMMAND, _SNAPSHOT_CONVERTER, snapshot_name, image_name, str(_SNAPSHOT_WIDTH), str(_SNAPSHOT_HEIGHT)], stdout=subprocess.PIPE)
 
         # Create thumbnail image
         subprocess.run([_PYTHON_COMMAND, _THUMBNAIL_CONVERTER, image_name, thumbnail_name, str(_THUMBNAIL_WIDTH), str(_THUMBNAIL_HEIGHT)], stdout=subprocess.PIPE)
 
         # Delete RAW file
-        os.remove(raw_name)
+        os.remove(snapshot_name)
 
         # Get list of face files from directory
         files = [e.name for e in os.scandir(name) if e.is_file() and not e.name.startswith(".")]

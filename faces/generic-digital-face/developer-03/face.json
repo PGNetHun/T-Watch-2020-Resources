@@ -8,24 +8,17 @@
             "font": "KeepCalmMedium-28.font",
             "color": "#FFFFFF",
             "align": "CENTER",
+            "textalign": "CENTER",
             "x": 0,
-            "y": -60,
-            "text": "There's no\nplace like"
-        },
-        {
-            "font": "KeepCalmMedium-30.font",
-            "color": "#FFFFFF",
-            "align": "CENTER",
-            "x": 0,
-            "y": 0,
-            "text": "127.0.0.1"
+            "y": -30,
+            "text": "There is no\nplace like\n127.0.0.1"
         },
         {
             "font": "KeepCalmMedium-40.font",
             "color": "#FFFFFF",
             "align": "CENTER",
             "x": 0,
-            "y": 80,
+            "y": 70,
             "text": "{HH}:{mm}"
         }
     ]

@@ -5,8 +5,12 @@
 #
 # Usage:
 #   $mp preview.py
-#   $mp preview.py [face-name]
-#   $mp preview.py --snapshot [face name] [raw image]
+#   $mp preview.py [face name] 
+#   $mp preview.py [face name] [snapshot file] [time tuple]
+# 
+#   [face name]         Preview given face. (Optional)
+#   [snapshot file]     Take snapshot of face preview and save as RAW file. (Optional)
+#   [time tuple]        Show given time instead of actaul time. Tuple: (YYYY, MM, DD, HH, mm, ss, weekday) (Optional)
 #
 # Snapshot will generate BGRA RAW image file.
 # It can be converted to PNG/JPEG/WebP image format with "[repo]/tools/convert_snapshot_to_image.py" script.
@@ -42,14 +46,11 @@ _MENU_ITEM_HEIGHT = const(50)
 # ************************************
 _FONTS_PATH = _DRIVE_LETTER + ":fonts/"
 
-_WEEK_DAYS = ["Monday", "Tuesday", "Wednesday",
-              "Thursday", "Friday", "Saturday", "Sunday"]
+_WEEK_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 _WEEK_DAYS_SHORT = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
 
-_MONTHS = ["January", "February", "March", "April", "May", "June",
-           "July", "August", "September", "October", "November", "December"]
-_MONTHS_SHORT = ["JAN", "FEB", "MAR", "APR", "MAY",
-                 "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
+_MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+_MONTHS_SHORT = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
 
 _BATTERY_PERCENT = const(100)
 
@@ -77,7 +78,7 @@ class Face:
         self._labels = []
         self._fonts = {}
 
-    def show(self):
+    def show(self, time_tuple = None):
         try:
             face_path = f"{self._base_path}/{self._name}"
             with open(f"{face_path}/{_FACE_FILE}", "r") as f:
@@ -89,7 +90,7 @@ class Face:
 
             self._load_background(face_config, face_path)
             self._load_labels(face_config)
-            self._update_labels()
+            self._update_labels(time_tuple)
         except Exception as e:
             print(f"Failed to load face: {self._name}", e)
 
@@ -137,9 +138,11 @@ class Face:
 
         __part_main = lv.PART.MAIN
         __default_align = lv.ALIGN.TOP_LEFT
+        __default_textalign = lv.TEXT_ALIGN.LEFT
         __hex_to_color = self._hex_color
         __create_label = lv.label
         __lv_align = lv.ALIGN
+        __lv_textalign = lv.TEXT_ALIGN
         __font_load = lv.font_load
         __labels = face_config["labels"]
 
@@ -150,12 +153,16 @@ class Face:
             font_name = __cfg_get("font", None)
             x = __cfg_get("x", 0)
             y = __cfg_get("y", 0)
-            align_text = __cfg_get("align", "TOP_LEFT")
-            align = __lv_align.__dict__[align_text] if hasattr(
-                __lv_align, align_text) else __default_align
+            
+            align_text = __cfg_get("align", None)
+            align = __lv_align.__dict__.get(align_text, __default_align)
+
+            align_text = __cfg_get("textalign", None)
+            textalign = __lv_textalign.__dict__.get(align_text, __default_textalign)
 
             label = __create_label(self._container)
             label.set_style_text_color(color, __part_main)
+            label.set_style_text_align(textalign, __part_main)
             label.set_recolor(True)
             label.align(align, x, y)
             label.set_text("")
@@ -181,8 +188,8 @@ class Face:
         color_int = int(value.lstrip("#"), 16)
         return lv.color_hex(color_int)
 
-    def _update_labels(self):
-        time_tuple = time.localtime()
+    def _update_labels(self, time_tuple = None):
+        time_tuple = time_tuple or time.localtime()
         for label in self._labels:
             text = label["text"]
 
@@ -306,8 +313,7 @@ class App():
         self._face_selector_dropdown: lv.dropdown = None
         self._is_running = False
 
-        self._faces = [entry[0] for entry in os.ilistdir(
-            self._faces_path) if entry[1] == _TYPE_DIRECTORY]
+        self._faces = [entry[0] for entry in os.ilistdir(self._faces_path) if entry[1] == _TYPE_DIRECTORY and not entry[0].startswith("_")]
         self._faces.sort()
 
         self._init_lvgl()
@@ -318,8 +324,7 @@ class App():
 
     async def loop(self, face_name=None):
         if face_name and self._path_exists(f"{self._faces_path}/{face_name}"):
-            self._face_selector_dropdown.set_selected(
-                self._faces.index(face_name))
+            self._face_selector_dropdown.set_selected(self._faces.index(face_name))
             self._show_face(face_name)
         else:
             self._show_menu()
@@ -327,8 +332,8 @@ class App():
         while self._is_running:
             await uasyncio.sleep_ms(200)
 
-    def snapshot(self, face_name, snapshot_file_name):
-        self._show_face(face_name)
+    def snapshot(self, face_name, snapshot_file_name, time_tuple):
+        self._show_face(face_name, time_tuple)
         snapshot = lv.snapshot_take(self._face_screen, lv.img.CF.TRUE_COLOR_ALPHA)
         size = self._face_screen.get_width() * self._face_screen.get_height() * 4
         data = snapshot.data.__dereference__(size)
@@ -372,8 +377,7 @@ class App():
 
     def _init_lvgl_fs(self):
         lv_fs_drv = lv.fs_drv_t()
-        LVGL_FS_Driver(self._root_path, lv_fs_drv,
-                       _DRIVE_LETTER, _FS_CACHE_SIZE)
+        LVGL_FS_Driver(self._root_path, lv_fs_drv, _DRIVE_LETTER, _FS_CACHE_SIZE)
 
     def _init_lvgl_image_decoders(self):
         lv.img.cache_set_size(_IMG_CACHE_COUNT)
@@ -393,8 +397,7 @@ class App():
         screen.set_size(lv.pct(100), lv.pct(100))
         screen.set_style_pad_ver(20, 0)
         screen.set_flex_flow(lv.FLEX_FLOW.COLUMN)
-        screen.set_flex_align(lv.FLEX_ALIGN.START,
-                              lv.FLEX_ALIGN.CENTER, lv.FLEX_ALIGN.CENTER)
+        screen.set_flex_align(lv.FLEX_ALIGN.START, lv.FLEX_ALIGN.CENTER, lv.FLEX_ALIGN.CENTER)
         screen.set_style_pad_row(10, lv.STATE.DEFAULT)
 
         # Faces dropdown
@@ -422,8 +425,7 @@ class App():
 
     def _init_face_screen(self):
         self._face_screen = self._create_screen()
-        self._face_screen.add_event_cb(
-            self._face_screen_click_cb, lv.EVENT.CLICKED, None)
+        self._face_screen.add_event_cb(self._face_screen_click_cb, lv.EVENT.CLICKED, None)
 
     def _show_button_cb(self, event):
         face_name = self._faces[self._face_selector_dropdown.get_selected()]
@@ -435,10 +437,10 @@ class App():
     def _show_menu(self):
         lv.scr_load(self._menu_screen)
 
-    def _show_face(self, name):
+    def _show_face(self, name, time_tuple = None):
         lv.scr_load(self._face_screen)
         self._face = Face(self._face_screen, self._faces_path, name)
-        self._face.show()
+        self._face.show(time_tuple)
 
     def _face_screen_click_cb(self, event):
         if self._face:
@@ -477,11 +479,12 @@ class App():
 # Program entry point
 # ************************************
 app = App()
-arg1 = sys.argv[1] if len(sys.argv) > 1 else None
-arg2 = sys.argv[2] if len(sys.argv) > 2 else None
-arg3 = sys.argv[3] if len(sys.argv) > 3 else None
 
-if arg1 == "--snapshot" and arg2 and arg3:
-    app.snapshot(arg2, arg3)
+face_name = sys.argv[1] if len(sys.argv) > 1 else None
+snapshot_file_name = sys.argv[2] if len(sys.argv) > 2 else None
+time_tuple = tuple(map(lambda x: int(x), sys.argv[3].strip("()").replace(" ", "").split(","))) if len(sys.argv) > 3 else None
+
+if snapshot_file_name:
+    app.snapshot(face_name, snapshot_file_name, time_tuple)
 else:
-    uasyncio.run(app.loop(arg1))
+    uasyncio.run(app.loop(face_name))

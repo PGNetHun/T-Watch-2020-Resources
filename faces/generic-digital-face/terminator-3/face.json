@@ -9,7 +9,8 @@
             "font": "TERMINAT-40.font",
             "color": "#FFFFFF",
             "align": "RIGHT_MID",
-            "x": 0,
+            "textalign": "CENTER",
+            "x": -10,
             "y": 0,
             "text": "{HH}\n{mm}"
         }
