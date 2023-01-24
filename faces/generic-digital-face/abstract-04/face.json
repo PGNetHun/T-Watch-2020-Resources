@@ -2,23 +2,23 @@
     "version": "1",
     "background": {
         "color": "#000000",
-        "image": "background.jpg"
+        "image": "background.png"
     },
     "labels": [
         {
-            "font": "KeepCalmMedium-60.font",
-            "color": "#2C2630",
-            "align": "CENTER",
-            "x": 4,
-            "y": 9,
+            "font": "KeepCalmMedium-50.font",
+            "color": "#0278B8",
+            "align": "RIGHT_MID",
+            "x": -6,
+            "y": -10,
             "text": "{HH}:{mm}"
         },
         {
-            "font": "KeepCalmMedium-60.font",
-            "color": "#AAF2F1",
-            "align": "CENTER",
-            "x": 0,
-            "y": 5,
+            "font": "KeepCalmMedium-50.font",
+            "color": "#FEE652",
+            "align": "RIGHT_MID",
+            "x": -11,
+            "y": -15,
             "text": "{HH}:{mm}"
         }
     ]
