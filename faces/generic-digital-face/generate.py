@@ -7,15 +7,13 @@ import subprocess
 
 _USAGE = """
 Usage:
-    python3 generate.py [micropython executable] [face name]
+    python3 generate.py [micropython executable]
 
-    [micropython executable]    Path of Unix port MicroPython executable. 
+    [micropython executable]    Path of Unix port MicroPython executable.
                                 For example: "~/src/lv_micropython/ports/unix/micropython-dev"
-    [face name]                 (Optional) Face to generate preview for.
 """
 
 _LIST_FILE = "faces.json"
-_FACE_FILE = "face.json"
 
 _PREVIEW_TIME_TUPLE = str((2023, 1, 1, 12, 0, 0, 0))
 
@@ -26,6 +24,7 @@ _PREVIEW_EXTENSION = ".jpg"
 _PYTHON_COMMAND = "python3"
 _PREVIEW_MPY_FILE = "preview.py"
 
+_SNAPSHOT_EXTENSION = ".raw"
 _SNAPSHOT_CONVERTER = "../../tools/convert_snapshot_to_image.py"
 _SNAPSHOT_WIDTH = 240
 _SNAPSHOT_HEIGHT = 240
@@ -44,37 +43,19 @@ except:
     sys.exit(1)
 
 face_names = []
-process_faces = []
 
-# Check if optional face name is passed as argument
-if len(sys.argv) > 2:
-    # Optional face name was given, so generate preview only for that face, and append to existing faces list
-    face_name = sys.argv[2]
-    process_faces = [face_name]
-    try:
-        with open(_LIST_FILE, "r") as f:
-            faces = json.load(f)
-            face_names = faces.get("names", [])
-            if face_name not in face_names:
-                face_names.append(face_name)
-            face_names.sort()
-    except:
-        pass
+# Get list of faces
+face_names = [e.name for e in os.scandir(".") if e.is_dir() and not e.name.startswith("_")]
+face_names.sort()
 
-else:
-    # Get list of faces
-    face_names = [e.name for e in os.scandir(".") if e.is_dir() and not e.name.startswith("_")]
-    face_names.sort()
-    process_faces = face_names
-
-faces = {
-    "previews":{
+faces_config = {
+    "previews": {
         "directory": _PREVIEWS_DIRECTORY,
         "name_postfix": _PREVIEW_POSTFIX + _PREVIEW_EXTENSION,
         "width": _SNAPSHOT_WIDTH,
         "height": _SNAPSHOT_HEIGHT,
     },
-    "thumbnails":{
+    "thumbnails": {
         "directory": _PREVIEWS_DIRECTORY,
         "name_postfix": _THUMBNAIL_POSTFIX + _THUMBNAIL_EXTENSION,
         "width": _THUMBNAIL_WIDTH,
@@ -83,42 +64,40 @@ faces = {
     "names": face_names
 }
 
-# Remove old unused preview files
 existing_files = set([e.name for e in os.scandir(_PREVIEWS_DIRECTORY) if e.is_file() and not e.name.startswith("_") and not e.name.startswith(".")])
-face_previews = [f"{name}{_PREVIEW_POSTFIX}{_PREVIEW_EXTENSION}" for name in face_names]
-face_previews.extend([f"{name}{_THUMBNAIL_POSTFIX}{_THUMBNAIL_EXTENSION}" for name in face_names])
-for filename in existing_files.difference(face_previews):
+keep_files = [f"{name}{_PREVIEW_POSTFIX}{_PREVIEW_EXTENSION}" for name in face_names]
+keep_files.extend([f"{name}{_THUMBNAIL_POSTFIX}{_THUMBNAIL_EXTENSION}" for name in face_names])
+for filename in existing_files.difference(keep_files):
     try:
-        print(f"Delete unused preview file: {filename}")
+        print(f"Delete unused files: {filename}")
         os.remove(f"{_PREVIEWS_DIRECTORY}/{filename}")
     except Exception as e:
-        print(f"Error deleting old unused preview file: {filename}", e)
+        print(f"Error deleting old unused file: {filename}", e)
 
-# Generate preview images
-for name in process_faces:
+# Generate faces and take RAW snapshots
+print("Take snapshots of faces")
+subprocess.run([mpy, _PREVIEW_MPY_FILE, "--snapshot-for-all",_SNAPSHOT_EXTENSION, _PREVIEWS_DIRECTORY, _PREVIEW_TIME_TUPLE])
+
+# Convert snapshots to preview image and delete snapshot files
+for name in face_names:
+    print(f"Convert snapshot to preview image: {name}")
+
+    snapshot_path = f"{_PREVIEWS_DIRECTORY}/{name}{_SNAPSHOT_EXTENSION}"
+    preview_path = f"{_PREVIEWS_DIRECTORY}/{name}{_PREVIEW_POSTFIX}{_PREVIEW_EXTENSION}"
+    thumbnail_path = f"{_PREVIEWS_DIRECTORY}/{name}{_THUMBNAIL_POSTFIX}{_THUMBNAIL_EXTENSION}"
+
     try:
-        print(f"Generate preview for face: {name}")
-
-        snapshot_name = f"{_PREVIEWS_DIRECTORY}/{name}{_PREVIEW_POSTFIX}.raw"
-        image_name = f"{_PREVIEWS_DIRECTORY}/{name}{_PREVIEW_POSTFIX}{_PREVIEW_EXTENSION}"
-        thumbnail_name = f"{_PREVIEWS_DIRECTORY}/{name}{_THUMBNAIL_POSTFIX}{_THUMBNAIL_EXTENSION}"
-        
-        # Generate face and take RAW snapshot
-        subprocess.run([mpy, _PREVIEW_MPY_FILE, name, snapshot_name, _PREVIEW_TIME_TUPLE], stdout=subprocess.PIPE)
-
         # Convert RAW snapshot to image file
-        subprocess.run([_PYTHON_COMMAND, _SNAPSHOT_CONVERTER, snapshot_name, image_name, str(_SNAPSHOT_WIDTH), str(_SNAPSHOT_HEIGHT)], stdout=subprocess.PIPE)
+        subprocess.run([_PYTHON_COMMAND, _SNAPSHOT_CONVERTER, snapshot_path, preview_path, str(_SNAPSHOT_WIDTH), str(_SNAPSHOT_HEIGHT)])
 
         # Create thumbnail image
-        subprocess.run([_PYTHON_COMMAND, _THUMBNAIL_CONVERTER, image_name, thumbnail_name, str(_THUMBNAIL_WIDTH), str(_THUMBNAIL_HEIGHT)], stdout=subprocess.PIPE)
+        subprocess.run([_PYTHON_COMMAND, _THUMBNAIL_CONVERTER, preview_path, thumbnail_path, str(_THUMBNAIL_WIDTH), str(_THUMBNAIL_HEIGHT)])
 
         # Delete RAW file
-        os.remove(snapshot_name)
-
+        os.remove(snapshot_path)
     except Exception as e:
-        print(f"Error generating face preview: {name}", e)
-
+        print(f"Error converting face snapshot to preview image: {snapshot_path}", e)
 
 # Save faces list JSON
 with open(_LIST_FILE, "w") as f:
-    json.dump(faces, f)
+    json.dump(faces_config, f)

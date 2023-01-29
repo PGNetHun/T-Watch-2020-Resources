@@ -1,19 +1,4 @@
 # Preview of generic digital faces
-#
-# Before preview set MicroPython executable as $mp environment variable:
-#   mp=~/src/lv_micropython/ports/unix/micropython-dev
-#
-# Usage:
-#   $mp preview.py
-#   $mp preview.py [face name] 
-#   $mp preview.py [face name] [snapshot file] [time tuple]
-# 
-#   [face name]         Preview given face. (Optional)
-#   [snapshot file]     Take snapshot of face preview and save as RAW file. (Optional)
-#   [time tuple]        Show given time instead of actaul time. Tuple: (YYYY, MM, DD, HH, mm, ss, weekday) (Optional)
-#
-# Snapshot will generate BGRA RAW image file.
-# It can be converted to PNG/JPEG/WebP image format with "[repo]/tools/convert_snapshot_to_image.py" script.
 
 import time
 import os
@@ -26,6 +11,32 @@ import uasyncio
 import lvgl as lv
 
 from micropython import const
+
+_USAGE = """
+Before preview set MicroPython executable as $mp environment variable:
+    mp=~/src/lv_micropython/ports/unix/micropython-dev
+
+Usage:
+    $mp preview.py
+    $mp preview.py [face name] 
+    $mp preview.py [face name] [snapshot file] [time tuple]
+    $mp preview.py --help
+    $mp preview.py --snapshot-for-all [snapshot name postfix] [snapshots path] [time tuple] 
+
+    [face name]                 Preview given face. (Optional)
+    [snapshot file]             Take snapshot of face preview and save as RAW file. (Optional)
+    [time tuple]                Show given time instead of actaul time. Tuple: (YYYY, MM, DD, HH, mm, ss, weekday) (Optional)
+
+    --help                      Show current usage help
+
+    --snapshot-for-all          Take snapshot RAW files for all faces
+    [snapshot name postfix]     Snapshot file postfix (example: "_preview.raw") (Required)
+    [snapshots path]            Path to store snapshot RAW files (example: _previews) (Required)
+    [time tuple]                Show given time instead of actaul time. Tuple: (YYYY, MM, DD, HH, mm, ss, weekday) (Required)
+
+Snapshot files are generated as BGRA RAW images.
+They can be converted to PNG/JPEG/WebP image format with the script: "[repo]/tools/convert_snapshot_to_image.py"
+"""
 
 _FACE_FILE = "face.json"
 _WIDTH = const(240)
@@ -314,6 +325,7 @@ class App():
         self._face_selector_dropdown: lv.dropdown = None
         self._is_running = False
 
+        self._load_faces_list()
         self._init_lvgl()
         self._init_lvgl_fs()
         self._init_lvgl_image_decoders()
@@ -329,12 +341,19 @@ class App():
         self._is_running = True
         while self._is_running:
             await uasyncio.sleep_ms(200)
+    
+    def snapshot_all(self, snapshot_name_postfix, snapshots_path, time_tuple):
+        for face_name in self._faces:
+            snapshot_file_name = f"{snapshots_path}/{face_name}{snapshot_name_postfix}"
+            self.snapshot(face_name, snapshot_file_name, time_tuple)
+            gc.collect()
 
     def snapshot(self, face_name, snapshot_file_name, time_tuple):
         if not face_name or not self._path_exists(f"{self._faces_path}/{face_name}"):
             print(f"Face does not exist: {face_name}")
             return
-
+        
+        self._face_screen.clean()
         self._show_face(face_name, time_tuple)
         snapshot = lv.snapshot_take(self._face_screen, lv.img.CF.TRUE_COLOR_ALPHA)
         size = self._face_screen.get_width() * self._face_screen.get_height() * 4
@@ -343,6 +362,7 @@ class App():
             f.write(data)
 
         lv.snapshot_free(snapshot)
+        self._face.dispose()
         print(f"Snapshot file: {snapshot_file_name} ({size} bytes)")
 
     def _init_lvgl(self):
@@ -405,8 +425,8 @@ class App():
         # Faces dropdown
         dd = lv.dropdown(screen)
         dd.set_width(_MENU_ITEM_WIDTH)
+        dd.set_options("\n".join(self._faces))
         self._face_selector_dropdown = dd
-        self._load_faces_list()
 
         # Show button
         button = lv.btn(screen)
@@ -442,8 +462,6 @@ class App():
         faces = [entry[0] for entry in os.ilistdir(self._faces_path) if entry[1] == _TYPE_DIRECTORY and not entry[0].startswith("_")]
         faces.sort()
         self._faces = faces
-
-        self._face_selector_dropdown.set_options("\n".join(faces))
 
     def _show_button_cb(self, event):
         face_name = self._faces[self._face_selector_dropdown.get_selected()]
@@ -504,10 +522,38 @@ class App():
 # ************************************
 app = App()
 
-face_name = sys.argv[1] if len(sys.argv) > 1 else None
-snapshot_file_name = sys.argv[2] if len(sys.argv) > 2 else None
-time_tuple = tuple(map(lambda x: int(x), sys.argv[3].strip("()").replace(" ", "").split(","))) if len(sys.argv) > 3 else None
+def get_time_tuple(arg):
+    return tuple(map(lambda x: int(x), arg.strip("()").replace(" ", "").split(",")))
 
+arg1 = sys.argv[1] if len(sys.argv) > 1 else None
+
+# No argument: show preview screen
+if arg1 == None:
+    uasyncio.run(app.loop())
+    sys.exit()
+
+# Show help
+if arg1 == "--help":
+    print(_USAGE)
+    sys.exit()
+
+# Take snapshot of all faces
+if arg1 == "--snapshot-for-all":
+    try:
+        snapshot_name_postfix = sys.argv[2]
+        snapshots_path = sys.argv[3]
+        time_tuple = get_time_tuple(sys.argv[4]) if len(sys.argv) > 3 else None
+    except:
+        print(_USAGE)
+        sys.exit(1)
+
+    app.snapshot_all(snapshot_name_postfix, snapshots_path, time_tuple)
+    sys.exit(0)
+    
+# Show or take snapshot of a given face
+face_name = arg1
+snapshot_file_name = sys.argv[2] if len(sys.argv) > 2 else None
+time_tuple = get_time_tuple(sys.argv[3]) if len(sys.argv) > 3 else None
 if snapshot_file_name:
     app.snapshot(face_name, snapshot_file_name, time_tuple)
 else:
