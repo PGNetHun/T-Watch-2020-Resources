@@ -13,7 +13,7 @@ Usage:
     [width]         Width of image in pixels
     [height]        Height of image in pixels
 """
-print("convert_snapshot_to_image: ", sys.argv)
+
 try:
     rawfile = sys.argv[1]
     imagefile = sys.argv[2]
