@@ -470,6 +470,7 @@ class App():
     def _reload_button_cb(self, event):
         current_face_name = self._faces[self._face_selector_dropdown.get_selected()]
         self._load_faces_list()
+        self._face_selector_dropdown.set_options("\n".join(self._faces))
         if current_face_name in self._faces:
             self._face_selector_dropdown.set_selected(self._faces.index(current_face_name))
 
